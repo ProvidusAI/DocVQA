@@ -100,12 +100,80 @@ The interactive API reference is at https://api.providus.ai/docs and the product
 
 Running on your own hardware: `curl -fsSL https://providus.ai/deployment.sh | sh` installs the same stack on macOS, Linux or Windows with local models. On-prem installs point `DOCAI_BASE_URL` at their own instance and everything above works unchanged.
 
-## Reproduce the numbers in this repo
+## Dataset
+
+DocVQA validation split, 5,349 questions over 1,285 page images. We read it from the Hugging Face mirror `lmms-lab/DocVQA` (config `DocVQA`, split `validation`). The images are not stored in this repo; the script below downloads about 1 GB into `data/docvqa/`:
+
+    pip install -r requirements-download.txt
+    python scripts/download_docvqa.py
+
+It writes one PNG per document, `annotations.jsonl` with the questions and accepted answers, and `hashes.json`, which maps each `docId` to the 12-character `img_hash` used in `results/predictions.jsonl` (md5 of the PNG bytes). The official distribution is through the RRC portal at docvqa.org under its own terms; the mirror lists apache-2.0.
+
+## Repository structure
+
+    .
+    ├── README.md
+    ├── MISSES.md                 where the remaining errors are and what fixes each group
+    ├── NEXT_ITERATION.md         protocol for the next run
+    ├── prompt.md                 the QA system prompt
+    ├── evaluate.py               standalone scorer (official ANLS, exact match)
+    ├── requirements.txt          editdistance, requests
+    ├── requirements-download.txt datasets, pillow (dataset download only)
+    ├── assets/banner.png
+    ├── scripts/
+    │   ├── derive_predictions.py     builds results/predictions.jsonl from the campaign artifact
+    │   ├── download_docvqa.py        step 1: dataset to data/docvqa/
+    │   ├── parse_with_docai.py       step 2: every page through the DocAI API to parsed/
+    │   └── run_qa.py                 step 3: QA over the parsed markdown, one pass
+    ├── results/
+    │   ├── predictions.jsonl         the published run, 5,349 rows
+    │   ├── SHA256SUMS
+    │   └── runs/<run-id>/            your own runs (not committed)
+    ├── data/docvqa/                  dataset (not committed)
+    │   ├── annotations.jsonl
+    │   ├── hashes.json
+    │   └── images/{docId}.png
+    └── parsed/{img_hash}/            DocAI output per page (not committed)
+        ├── result.md
+        └── grounding.json
+
+## Reproduce
+
+Two levels. The first checks our published numbers and takes a few seconds. The second re-runs the benchmark end to end with your own DocAI key and QA model.
+
+### 1. Verify the published table
 
     pip install -r requirements.txt
     python evaluate.py
 
-`results/SHA256SUMS` covers the predictions file.
+`evaluate.py` recomputes every metric from `results/predictions.jsonl` and exits non-zero if any value differs from the table above. `results/SHA256SUMS` covers the predictions file.
+
+### 2. Run the benchmark yourself
+
+Step 1, dataset (about 1 GB):
+
+    pip install -r requirements-download.txt
+    python scripts/download_docvqa.py
+
+Step 2, parse every page with DocAI. Create an account at https://platform.providus.ai/register, make a key under Settings, API Keys, and create a knowledge base to hold the pages (`POST /v1/knowledge-bases` or the app). Then:
+
+    pip install -r requirements.txt
+    export DOCAI_API_KEY=...
+    export DOCAI_BASE_URL=https://api.providus.ai     # or your on-prem instance
+    python scripts/parse_with_docai.py --kb-id <knowledge base id>
+
+Each page is uploaded with `auto_parse=true`; the script waits for the job and saves `result.md` and `grounding.json` under `parsed/{img_hash}/`. It skips pages that are already parsed, so it can be stopped and resumed. 1,285 pages cost 1,285 parse credits.
+
+Step 3, answer the questions from the parsed markdown alone and score:
+
+    export QA_API_KEY=...
+    export QA_BASE_URL=https://api.openai.com/v1      # any OpenAI-compatible endpoint
+    python scripts/run_qa.py --model openai/gpt-5.6-luna --run-id luna-baseline
+    python evaluate.py results/runs/luna-baseline/predictions.jsonl
+
+The QA model receives `prompt.md` as the system prompt and the full `result.md` of the page as the user message, temperature 0, 128 output tokens. It never receives the image. The run writes `results/runs/<run-id>/predictions.jsonl` in the same shape as the published file plus a `run.json` with the model and endpoint, and `evaluate.py` prints the same table for it. This is the protocol in `NEXT_ITERATION.md`: one configuration, one pass, official scoring.
+
+Try a small slice first: every script accepts `--limit N`.
 
 ## Data format
 
@@ -124,16 +192,6 @@ One JSON object per line in `results/predictions.jsonl`, sorted by `question_id`
 | `exact_ci` | boolean | Case-insensitive exact match |
 | `exact_normalized` | boolean | Exact match after normalization |
 | `diagnostic` | string | Miss category used in `MISSES.md` |
-
-## Files
-
-- `results/predictions.jsonl`: one row per question with the answers, the prediction, both scores and a miss diagnostic.
-- `MISSES.md`: where the remaining errors are and what fixes each group.
-- `NEXT_ITERATION.md`: how the next run is executed and scored.
-- `prompt.md`: the QA prompt.
-- `evaluate.py`: standalone scorer, no dependency on the DocAI codebase.
-
-Raw DocVQA images are not included. The Hugging Face mirror (`lmms-lab/DocVQA`) lists apache-2.0; the official distribution is through the RRC portal under its own terms.
 
 ---
 
