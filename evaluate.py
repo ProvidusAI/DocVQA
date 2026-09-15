@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Recompute the DocVQA metric table from results/predictions.jsonl.
+"""Recompute the DocVQA metric table from a predictions file.
 
-Standalone: no DocAI imports. Fails (exit 1) if the recomputed numbers differ
-from the published ones, so the README table is checked, not asserted.
+Standalone: no DocAI imports. For the published file (results/predictions.jsonl)
+it also fails (exit 1) if the recomputed numbers differ from the README, so the
+table is checked, not asserted. For any other file it just prints the table.
 
-Usage: python evaluate.py [results/predictions.jsonl]
+Usage: python evaluate.py [results/predictions.jsonl | results/runs/<run-id>/predictions.jsonl]
 """
 import json
 import re
@@ -63,6 +64,8 @@ def main(path: str) -> int:
     print(f"normalized exact          {got['exact_normalized']}  ({got['exact_normalized']/n:.1%})")
     print(f"exact + partial coverage  {got['coverage']}  ({got['coverage']/n:.1%})")
     print(f"internal ANLS             {got['internal_anls']:.6f}  (repair-loop scorer, not ANLS)")
+    if Path(path).resolve() != Path("results/predictions.jsonl").resolve():
+        return 0  # a new run: print the table, nothing to assert against
     bad = {k: (got[k], PUBLISHED[k]) for k in PUBLISHED if got[k] != PUBLISHED[k]}
     if bad:
         print(f"MISMATCH vs published: {bad}", file=sys.stderr)
