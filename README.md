@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Official%20ANLS-0.9066-2B6FAA" alt="Official ANLS 0.9066">
-  <img src="https://img.shields.io/badge/Exact%20%2B%20partial-93.1%25-6DBBFF" alt="Exact + Sparsed coverage 93.1%">
+  <img src="https://img.shields.io/badge/Exact%20%2B%20partial-93.1%25-6DBBFF" alt="Accuracy 93.1%">
   <img src="https://img.shields.io/badge/Questions-5%2C349-111111" alt="5,349 questions">
+  <img src="https://img.shields.io/badge/Official%20ANLS-0.9066-2B6FAA" alt="Official ANLS 0.9066">
   <img src="https://img.shields.io/badge/Dataset-DocVQA%20val-555555" alt="DocVQA validation">
   <img src="https://img.shields.io/badge/Parsed%20by-Providus%20DocAI-E89B3C" alt="Parsed by Providus DocAI">
 </p>
