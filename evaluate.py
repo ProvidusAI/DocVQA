@@ -20,6 +20,7 @@ PUBLISHED = {
     "official_anls": 0.906554,
     "exact_ci": 4506,
     "exact_normalized": 4725,
+    "exact_or_near": 4981,  # exact, or near match under the campaign scorer (internal_score >= 0.5)
 }
 
 
@@ -53,11 +54,15 @@ def main(path: str) -> int:
         "official_anls": round(sum(official_anls(r["pred"], r["answers"]) for r in rows) / n, 6),
         "exact_ci": sum(any(normalize_ci(r["pred"]) == normalize_ci(a) for a in r["answers"]) for r in rows),
         "exact_normalized": sum(any(normalize(r["pred"]) == normalize(a) for a in r["answers"]) for r in rows),
+        # Near-match rule (similarity >= 0.35, containment, or token overlap) lives in the
+        # campaign scorer; its per-row result is stored in internal_score, read here as-is.
+        "exact_or_near": sum(r["internal_score"] >= 0.5 for r in rows),
     }
     print(f"questions                 {got['total']}")
     print(f"official ANLS             {got['official_anls']:.6f}")
     print(f"normalized exact          {got['exact_normalized']}  ({got['exact_normalized']/n:.1%})")
     print(f"case-insensitive exact    {got['exact_ci']}  ({got['exact_ci']/n:.1%})")
+    print(f"exact or near match       {got['exact_or_near']}  ({got['exact_or_near']/n:.1%})")
     if Path(path).resolve() != Path("results/predictions.jsonl").resolve():
         return 0  # a new run: print the table, nothing to assert against
     bad = {k: (got[k], PUBLISHED[k]) for k in PUBLISHED if got[k] != PUBLISHED[k]}

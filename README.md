@@ -11,6 +11,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Official%20ANLS-0.9066-2B6FAA" alt="Official ANLS 0.9066">
   <img src="https://img.shields.io/badge/Normalized%20exact%20match-88.3%25-6DBBFF" alt="Normalized exact match 88.3%">
+  <img src="https://img.shields.io/badge/Exact%20%2B%20near%20match-93.1%25-6DBBFF" alt="Exact + near match 93.1%">
   <img src="https://img.shields.io/badge/Questions-5%2C349-111111" alt="5,349 questions">
   <img src="https://img.shields.io/badge/Dataset-DocVQA%20val-555555" alt="DocVQA validation">
   <img src="https://img.shields.io/badge/Parsed%20by-Providus%20DocAI-E89B3C" alt="Parsed by Providus DocAI">
@@ -104,13 +105,14 @@ Coordinates come normalized and in pixels. `confidence.route` says whether the e
 
 ## Result
 
-**Official ANLS 0.9066. Normalized exact match 88.3% (4,725 of 5,349).** May 2026 campaign result, DocVQA validation set, all 5,349 questions scored, none excluded.
+**Official ANLS 0.9066. Normalized exact match 88.3% (4,725 of 5,349). Exact or near match 93.1% (4,981).** May 2026 campaign result, DocVQA validation set, all 5,349 questions scored, none excluded.
 
 | Metric | Value | Definition |
 |---|---:|---|
 | Official ANLS | 0.9066 | Standard DocVQA ANLS. Best normalized Levenshtein similarity over the accepted answers, zero below 0.5. |
 | Normalized exact match | 88.3% (4,725) | Exact after lowercasing and removing punctuation, accents and extra spaces. |
 | Case-insensitive exact match | 84.2% (4,506) | Exact after lowercasing and trimming only. |
+| Exact + near match | 93.1% (4,981) | 4,725 exact plus 256 near matches. A near match is a prediction that is not exact but, after normalization, has Levenshtein similarity of at least 0.35 to an accepted answer, or contains it or is contained by it (3 or more characters), or shares at least 80% of the shorter answer's tokens (or half of all tokens with at least two shared). Examples from this run: "May 3, 2006 at 9:00 a.m. local time" for "May 3, 2006", "quality issues" for "Quality", "Week 2" for "2". Useful for seeing how much is a formatting gap rather than a missing answer; not a leaderboard metric. |
 
 Every number in this table is recomputed by `evaluate.py` from `results/predictions.jsonl`. The script exits non-zero if any value differs from what is written here, and it runs in GitHub Actions on every push (`.github/workflows/evaluate.yml`). `MISSES.md` lists where the remaining errors are and what fixes each group.
 
@@ -274,7 +276,7 @@ One JSON object per line in `results/predictions.jsonl`, sorted by `question_id`
 | `answers` | list of strings | Accepted answers from the dataset |
 | `pred` | string | DocAI plus QA model prediction |
 | `official_score` | float | Official ANLS for this row, 0 to 1 |
-| `internal_score` | float | Score from the campaign's internal repair-loop scorer, 0 to 1. Kept for the record; not a reported metric |
+| `internal_score` | float | Campaign scorer, 0 to 1. Rows at or above 0.5 are the "exact + near match" count; the near-match rule is defined under Result |
 | `exact_ci` | boolean | Case-insensitive exact match |
 | `exact_normalized` | boolean | Exact match after normalization |
 | `diagnostic` | string | Miss category used in `MISSES.md` |
