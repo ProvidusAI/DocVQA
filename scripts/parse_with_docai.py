@@ -85,7 +85,7 @@ def have_output(out_dir: Path) -> bool:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--kb-id", required=True)
-    ap.add_argument("--data-dir", default="data")
+    ap.add_argument("--dataset-dir", default="data/docvqa", help="data/docvqa or data/docvqa-test")
     ap.add_argument("--parsed-dir", default="parsed")
     ap.add_argument("--doc-ids", default=None, help="comma-separated docIds (default: all)")
     ap.add_argument("--limit", type=int, default=None)
@@ -99,7 +99,8 @@ def main() -> None:
     parsed = Path(args.parsed_dir)
     jobs_path = parsed / "_jobs.json"
     jobs = load_jobs(jobs_path)
-    hashes = json.loads((Path(args.data_dir) / "docvqa" / "hashes.json").read_text())
+    dataset = Path(args.dataset_dir)
+    hashes = json.loads((dataset / "hashes.json").read_text())
     if args.doc_ids:
         wanted = set(args.doc_ids.split(","))
         hashes = {d: h for d, h in hashes.items() if d in wanted}
@@ -111,7 +112,7 @@ def main() -> None:
         for doc_id, img_hash in items:
             if have_output(parsed / img_hash) or img_hash in jobs:
                 continue
-            img_path = Path(args.data_dir) / "docvqa" / "images" / f"{doc_id}.png"
+            img_path = dataset / "images" / f"{doc_id}.png"
             try:
                 jobs[img_hash] = {"doc_id": doc_id, **queue(img_path, kb_id=args.kb_id)}
                 queued += 1

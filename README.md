@@ -23,7 +23,8 @@
   <a href="https://docs.providus.ai">Docs</a> •
   <a href="https://docs.providus.ai/mcp">MCP</a> •
   <a href="MISSES.md">Where the misses are</a> •
-  <a href="NEXT_ITERATION.md">Next iteration</a>
+  <a href="NEXT_ITERATION.md">Next iteration</a> •
+  <a href="SUBMISSION.md">Official submission</a>
 </p>
 
 Providus DocAI turns a scanned page into two things: markdown a person can read, and a grounding JSON a program can trust. Every element in the JSON carries its page, its bounding box, its text and a confidence; tables carry their cells with row and column geometry. DocVQA is how we test that output is complete. Its 5,349 questions cover 1,286 real scanned documents: forms, letters, reports, tables, charts. (Two of them, document ids 4331 and 4386, are byte-identical page images, so the pipeline parses 1,285 unique pages.) The benchmark is normally used to score vision models that look at the page. We use it differently: the question-answering model never sees an image, only what DocAI extracted. If the answer is not in our output, the model cannot find it.
@@ -200,6 +201,7 @@ It writes one PNG per document, `annotations.jsonl` with the questions and accep
     ├── README.md
     ├── MISSES.md                 where the remaining errors are and what fixes each group
     ├── NEXT_ITERATION.md         protocol for the next run
+    ├── SUBMISSION.md             how the official test-set entry on the RRC portal is produced
     ├── prompt.md                 the QA system prompt
     ├── evaluate.py               standalone scorer (official ANLS, exact match)
     ├── requirements.txt          editdistance, requests
@@ -212,7 +214,8 @@ It writes one PNG per document, `annotations.jsonl` with the questions and accep
     │   ├── build_gallery.py          draws the answer element's box on the page for the gallery
     │   ├── download_docvqa.py        step 1: dataset to data/docvqa/
     │   ├── parse_with_docai.py       step 2: every page through the DocAI API to parsed/
-    │   └── run_qa.py                 step 3: QA over the parsed markdown, one pass
+    │   ├── run_qa.py                 step 3: QA over the parsed markdown, one pass
+    │   └── make_submission.py        converts a test run into the RRC portal's result_task1.json
     ├── results/
     │   ├── predictions.jsonl         the published run, 5,349 rows
     │   ├── SHA256SUMS
