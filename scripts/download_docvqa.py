@@ -32,15 +32,17 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data-dir", default="data")
     ap.add_argument("--limit", type=int, default=None, help="first N questions only")
+    ap.add_argument("--split", default="validation", choices=["validation", "test"],
+                    help="test has no answers; it is what the RRC portal scores")
     args = ap.parse_args()
 
     from datasets import load_dataset
 
-    out = Path(args.data_dir) / "docvqa"
+    out = Path(args.data_dir) / ("docvqa" if args.split == "validation" else "docvqa-test")
     img_dir = out / "images"
     img_dir.mkdir(parents=True, exist_ok=True)
 
-    ds = load_dataset("lmms-lab/DocVQA", "DocVQA", split="validation")
+    ds = load_dataset("lmms-lab/DocVQA", "DocVQA", split=args.split)
     if args.limit:
         ds = ds.select(range(min(args.limit, len(ds))))
 
@@ -68,7 +70,7 @@ def main() -> None:
             ann.write(json.dumps({
                 "questionId": str(row["questionId"]),
                 "question": row["question"],
-                "answers": list(row["answers"]),
+                "answers": list(row["answers"] or []),
                 "docId": doc_id,
                 "img_hash": hashes[doc_id],
             }, ensure_ascii=False) + "\n")
