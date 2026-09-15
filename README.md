@@ -41,7 +41,7 @@ DocVQA asks 5,349 questions about 1,285 real scanned documents: forms, letters, 
 
 | Metric | Value | Definition |
 |---|---:|---|
-| Exact + Sparsed coverage | 93.1% (4,981 / 5,349) | Questions scoring at least 0.5 under the internal scorer. A bucket count, not a score. |
+| Exact + Sparsed coverage | 93.1% (4,981 / 5,349) | Percentage of extractions resulting in fully accurate and partially correct results |
 | Official ANLS | 0.9066 | Standard DocVQA ANLS. Best normalized Levenshtein similarity over the accepted answers, zero below 0.5. |
 | Normalized exact match | 88.3% (4,725) | Exact after lowercasing and removing punctuation, accents and extra spaces. |
 | Case-insensitive exact match | 84.2% (4,506) | Exact after lowercasing and trimming. The metric Landing AI reports. |
