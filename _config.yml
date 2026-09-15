@@ -1,0 +1,12 @@
+title: Providus AI on DocVQA
+description: Document parsing scored by what a language model can answer from the output alone.
+theme: jekyll-theme-minimal
+show_downloads: false
+exclude:
+  - .venv
+  - data
+  - parsed
+  - results/runs
+  - scripts
+  - requirements.txt
+  - requirements-download.txt
