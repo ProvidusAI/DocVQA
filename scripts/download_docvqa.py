@@ -2,7 +2,11 @@
 """Download the DocVQA validation split into data/docvqa/.
 
 Writes one PNG per document plus the question file, and a docId -> img_hash map
-so parse output folders line up with results/predictions.jsonl.
+so parse output folders line up with results/predictions.jsonl. The hash is taken
+from the published predictions when the document is in them (always, for the
+validation split); re-encoding a PNG does not give stable bytes across Pillow
+versions, so hashing the download would not match. Documents absent from the
+predictions get an md5 prefix of their PNG bytes.
 
     data/docvqa/
       annotations.jsonl   5,349 rows: questionId, question, answers, docId
@@ -40,6 +44,13 @@ def main() -> None:
     if args.limit:
         ds = ds.select(range(min(args.limit, len(ds))))
 
+    published = Path("results/predictions.jsonl")
+    known: dict[str, str] = {}
+    if published.exists():
+        for line in published.open(encoding="utf-8"):
+            r = json.loads(line)
+            known[str(r["doc_id"])] = r["img_hash"]
+
     hashes: dict[str, str] = {}
     with (out / "annotations.jsonl").open("w", encoding="utf-8") as ann:
         for i, row in enumerate(ds, 1):
@@ -53,7 +64,7 @@ def main() -> None:
                     row["image"].save(buf, format="PNG")
                     png = buf.getvalue()
                     img_path.write_bytes(png)
-                hashes[doc_id] = image_hash(png)
+                hashes[doc_id] = known.get(doc_id) or image_hash(png)
             ann.write(json.dumps({
                 "questionId": str(row["questionId"]),
                 "question": row["question"],

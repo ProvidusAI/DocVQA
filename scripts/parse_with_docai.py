@@ -75,12 +75,16 @@ def main() -> None:
     ap.add_argument("--data-dir", default="data")
     ap.add_argument("--parsed-dir", default="parsed")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--doc-ids", default=None, help="comma-separated docIds to parse (default: all)")
     ap.add_argument("--timeout", type=int, default=900, help="seconds to wait per document")
     args = ap.parse_args()
     if not HEADERS["x-api-key"]:
         sys.exit("DOCAI_API_KEY is not set")
 
     hashes = json.loads((Path(args.data_dir) / "docvqa" / "hashes.json").read_text())
+    if args.doc_ids:
+        wanted = set(args.doc_ids.split(","))
+        hashes = {d: h for d, h in hashes.items() if d in wanted}
     items = sorted(hashes.items())[: args.limit] if args.limit else sorted(hashes.items())
     done = failed = skipped = 0
     for doc_id, img_hash in items:

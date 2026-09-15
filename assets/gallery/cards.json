@@ -1,0 +1,80 @@
+[
+ {
+  "doc_id": "14465",
+  "img_hash": "24e2f43bc531",
+  "question": "What is the ‘title’ of the plot?",
+  "answer": "AGE ADJUSTED MOTOR VEHICLE ACCIDENT MORTALITY RATE CANADA",
+  "gold": [
+   "Age adjusted motor vehicle accident mortality rate",
+   "age adjusted motor vehicle accident mortality rate canada"
+  ],
+  "image": "assets/gallery/14465.png",
+  "element_label": "figure_title",
+  "element_text": "AGE ADJUSTED MOTOR VEHICLE ACCIDENT MORTALITY RATE CANADA",
+  "excerpt": "[header] FIGURE C.2.  AGE ADJUSTED MOTOR VEHICLE ACCIDENT MORTALITY RATE CANADA  ![Figure 1](imgs/cropped_page0_idx0.jpg)  > **📊 Visual analysis** *(page 1)* > > 1. Chart type: Line chart > 2. Full title: CANADA > 3. Subtitle: — > 4. Source",
+  "located": true
+ },
+ {
+  "doc_id": "5238",
+  "img_hash": "7d5c7dc2760c",
+  "question": "What is the Date Assigned as per the document?",
+  "answer": "January 18, 2005",
+  "gold": [
+   "January 18, 2005"
+  ],
+  "image": "assets/gallery/5238.png",
+  "element_label": "text",
+  "element_text": "January 18, 2005",
+  "excerpt": "ict confidentiality. The draft manuscript and all correspondence will be sent directly to DesignWrite.  DATE ASSIGNED:  January 18, 2005  PURCHASE ORDER NUMBER: 3973  DUE DATE (outline):  August 9, 2000   ## ## WRITER'S FEE:  $3,500. One-th",
+  "located": true
+ },
+ {
+  "doc_id": "6982",
+  "img_hash": "3175b56a0df7",
+  "question": "According to budget request summary what is total amount of proposed budget?",
+  "answer": "15,000.00",
+  "gold": [
+   "15,000.00",
+   "15000.00",
+   "$ 15,000.00",
+   "$15,000.00"
+  ],
+  "image": "assets/gallery/6982.png",
+  "element_label": "formula",
+  "element_text": "7. TOTAL AMOUNT of Proposed Budget... $\\underline{15,000.00}$ ___ $\\underline{15,000.00}$",
+  "excerpt": "[header] ---  [header] ...  [header] THE ROBERT A. WELCH FOUNDATION 2010 Bank of the Southwest Building Houston, Texas 77002   ## ## BUDGET REQUEST SUMMARY  YEAR (AS APPLICABLE) May 1, 19 66 May 1, 19 ___ May 1, 19 ___ Total through through",
+  "located": true
+ },
+ {
+  "doc_id": "4806",
+  "img_hash": "2b986d2fbac9",
+  "question": "What is the name of the company?",
+  "answer": "ITC Limited",
+  "gold": [
+   "ITC LIMITED",
+   "ITC Limited"
+  ],
+  "image": "assets/gallery/4806.png",
+  "element_label": "header",
+  "element_text": "ITC Limited REPORT AND ACCOUNTS 2013",
+  "excerpt": "[header] ITC Limited REPORT AND ACCOUNTS 2013   ## ## ITC's Brands: Powering Economic Growth  Great brands are not just about delighting the consumer, they are also about powering national economic growth. Brands capture value for the natio",
+  "located": true
+ },
+ {
+  "doc_id": "14314",
+  "img_hash": "5bdf02411e18",
+  "question": "In which sea did the sea bird wreck occur ?",
+  "answer": "IRISH SEA",
+  "gold": [
+   "the irish sea",
+   "Irish Sea",
+   "in the irish sea",
+   "The Irish Sea"
+  ],
+  "image": "assets/gallery/14314.png",
+  "element_label": "text",
+  "element_text": "IN THE IRISH SEA",
+  "excerpt": "[header] THE  SEA BIRD WRECK  IN THE IRISH SEA  AUTUMN 1969  THE NATURAL ENVIRONMENT RESEARCH COUNCIL PUBLICATIONS SERIES C No4 1971  [seal] THE NATURAL ENVIRONMENT RESEARCH COUNCIL",
+  "located": true
+ }
+]

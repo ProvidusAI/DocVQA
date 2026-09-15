@@ -25,7 +25,74 @@
   <a href="NEXT_ITERATION.md">Next iteration</a>
 </p>
 
-DocVQA asks 5,349 questions about 1,286 real scanned documents: forms, letters, reports, tables, charts. (Two of them, document ids 4331 and 4386, are byte-identical page images, so the pipeline parses 1,285 unique pages.) It is normally used to score vision models that look at the page. We use it to score our parse output instead. The question-answering model in this benchmark never sees an image. It only sees the text and layout that Providus DocAI extracted from the page. If the answer is not in our output, the model cannot find it.
+Providus DocAI turns a scanned page into two things: markdown a person can read, and a grounding JSON a program can trust. Every element in the JSON carries its page, its bounding box, its text and a confidence; tables carry their cells with row and column geometry. DocVQA is how we test that output is complete. Its 5,349 questions cover 1,286 real scanned documents: forms, letters, reports, tables, charts. (Two of them, document ids 4331 and 4386, are byte-identical page images, so the pipeline parses 1,285 unique pages.) The benchmark is normally used to score vision models that look at the page. We use it differently: the question-answering model never sees an image, only what DocAI extracted. If the answer is not in our output, the model cannot find it.
+
+## What the parse output looks like
+
+Five DocVQA pages, parsed on a laptop with local models (ocr-model and vision-model in a local model server, no cloud). The blue box is the grounding element DocAI returned that contains the answer. No box was drawn by hand: `scripts/build_gallery.py` searches the grounding JSON for the answer text and draws the element's bounding box.
+
+<table>
+<tr>
+<td width="50%"><img src="assets/gallery/6982.png" alt="Budget request summary form"></td>
+<td width="50%"><img src="assets/gallery/5238.png" alt="Writer assignment letter"></td>
+</tr>
+<tr>
+<td>
+<b>Q:</b> According to the budget request summary, what is the total amount of the proposed budget?<br>
+<b>A:</b> 15,000.00<br>
+A typed 1966 grant form. DocAI returned the table with 15 cells from ruled-line geometry and the total row as its own element.
+</td>
+<td>
+<b>Q:</b> What is the Date Assigned as per the document?<br>
+<b>A:</b> January 18, 2005<br>
+A label and value pair in running text. The element is 16 characters wide, so a downstream system can highlight exactly that span.
+</td>
+</tr>
+<tr>
+<td><img src="assets/gallery/14465.png" alt="Line chart of motor vehicle accident mortality"></td>
+<td><img src="assets/gallery/14314.png" alt="Report cover with photo and seal"></td>
+</tr>
+<tr>
+<td>
+<b>Q:</b> What is the title of the plot?<br>
+<b>A:</b> AGE ADJUSTED MOTOR VEHICLE ACCIDENT MORTALITY RATE CANADA<br>
+The title is a <code>figure_title</code> element; the chart itself gets a vision pass that reads axes, scale and the data points into the markdown.
+</td>
+<td>
+<b>Q:</b> In which sea did the sea bird wreck occur?<br>
+<b>A:</b> IRISH SEA<br>
+A photographed cover with a seal. The seal is detected as its own <code>seal</code> element and its text is read; the title lines are separate text elements.
+</td>
+</tr>
+<tr>
+<td><img src="assets/gallery/4806.png" alt="Annual report page with header"></td>
+<td>
+<b>Q:</b> What is the name of the company?<br>
+<b>A:</b> ITC Limited<br>
+A designed annual report page. The header block is returned as a <code>header</code> element, separate from the body text, so headers and footers can be kept or dropped by the consumer.
+</td>
+</tr>
+</table>
+
+## What one parse call returns
+
+The element behind the second card, verbatim from `grounding.json`:
+
+```json
+{
+  "id": "p1_e0004",
+  "type": "text",
+  "label": "text",
+  "bbox": { "x1": 0.357, "y1": 0.183, "x2": 0.492, "y2": 0.2 },
+  "pixel_bbox": [357, 183, 492, 200],
+  "content": "January 18, 2005",
+  "ocr_content_len": 16,
+  "confidence": { "score": 0.75, "route": "medium", "vlm_applied": false },
+  "markdown_anchor": "p1-e0004"
+}
+```
+
+Coordinates come normalized and in pixels. `confidence.route` says whether the element was routed to the vision model for a second look. `markdown_anchor` links the element to its place in `result.md`, so a citation in the markdown can be traced back to a box on the page. Table elements add a `cells` array (row, column, span, bbox, text) with `cellsSource` naming how the geometry was measured; the budget form above reports `table-former`. The full document is `schema_version`, `document`, `confidence`, `diagnostics` and `pages[]`, each page with `width`, `height` and `elements[]`.
 
 ```
  PDF / scan            Providus DocAI                       QA model              Score
@@ -63,7 +130,18 @@ Every number in this table is recomputed by `evaluate.py` from `results/predicti
 | Vision | vision-model (a local model server) |
 | QA | gpt-5.4-mini and gpt-5.4 (OpenAI), temperature 0, grounded context up to 24,000 characters, 128 output tokens |
 
-DocAI runs the same pipeline against any OCR, vision or QA model you point it at, hosted or local. That is a design choice: an on-prem customer with no internet runs everything on one a local model server box, and the cloud service uses hosted models. Every result we publish names the models that produced it.
+DocAI runs the same pipeline against any OCR, vision or QA model you point it at, hosted or local. That is a design choice: an on-prem customer with no internet runs everything on one a local model server box, and the cloud service uses hosted models. Every result we publish names the models that produced it. The gallery above was produced with the smaller local models (ocr-model, vision-model) on a laptop; the benchmark figures below used vision-model.
+
+## Where it runs
+
+| | How | Models |
+|---|---|---|
+| Cloud API | `https://api.providus.ai`, API key in `x-api-key` | Hosted OCR, vision and QA models |
+| On-prem | Versioned installer, Docker, one machine, no internet needed | Your a local model server or Ollama models |
+| Coding agents | DocAI MCP server for Claude Code, Cursor, Codex | Same API underneath |
+| Redaction | Rules per knowledge base; PII, health, card and company data scrubbed from markdown and burned on page images at parse time | Runs after parse, on-prem by default |
+
+One pipeline, one artifact contract, in all four.
 
 ## Test it on your own documents
 
@@ -112,7 +190,7 @@ DocVQA validation split, 5,349 questions over 1,286 documents (1,285 unique page
     pip install -r requirements-download.txt
     python scripts/download_docvqa.py
 
-It writes one PNG per document, `annotations.jsonl` with the questions and accepted answers, and `hashes.json`, which maps each `docId` to the 12-character `img_hash` used in `results/predictions.jsonl` (md5 of the PNG bytes). The official distribution is through the RRC portal at docvqa.org under its own terms; the mirror lists apache-2.0.
+It writes one PNG per document, `annotations.jsonl` with the questions and accepted answers, and `hashes.json`, which maps each `docId` to the 12-character `img_hash` used in `results/predictions.jsonl`, so your `parsed/` folders line up with the published rows. The official distribution is through the RRC portal at docvqa.org under its own terms; the mirror lists apache-2.0.
 
 ## Repository structure
 
@@ -124,9 +202,12 @@ It writes one PNG per document, `annotations.jsonl` with the questions and accep
     ├── evaluate.py               standalone scorer (official ANLS, exact match)
     ├── requirements.txt          editdistance, requests
     ├── requirements-download.txt datasets, pillow (dataset download only)
-    ├── assets/banner.png
+    ├── assets/
+    │   ├── banner.png
+    │   └── gallery/                  the five evidence cards above (images + cards.json)
     ├── scripts/
     │   ├── derive_predictions.py     builds results/predictions.jsonl from the campaign artifact
+    │   ├── build_gallery.py          draws the answer element's box on the page for the gallery
     │   ├── download_docvqa.py        step 1: dataset to data/docvqa/
     │   ├── parse_with_docai.py       step 2: every page through the DocAI API to parsed/
     │   └── run_qa.py                 step 3: QA over the parsed markdown, one pass
