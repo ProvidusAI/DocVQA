@@ -7,7 +7,7 @@ Zero-score questions under official ANLS: 456 of 5,349.
 | cache_or_extraction_missing | 272 | Extraction. The parse failed or the answer text never reached the output. Largest group. Re-parse with the current pipeline (router fix, geometry table cells, margin and header/footer OCR) and re-bucket. |
 | evidence_retrieved_qa_wrong | 178 | QA. Give the model the full parsed document instead of a 24,000-character window. Stronger grounded prompt. |
 | evidence_missing, evidence_not_retrieved | 5, 1 | Falls out of the extraction lane. |
-| Dataset issues | 0 flagged | Review remaining misses by hand. Publish an exclusion list with a reason per question. Excluded questions stay visible and are not counted. Landing AI excluded 18. |
+| Dataset issues | 0 flagged | Review remaining misses by hand. Publish an exclusion list with a reason per question. Excluded questions stay visible and are not counted. Today every question is counted. |
 
 Partial-credit questions (official score above 0 and below 1): 168 of 5,349. These do not score zero, but each one costs ANLS and none counts as exact.
 
