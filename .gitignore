@@ -4,3 +4,4 @@ __pycache__/
 data/
 parsed/
 results/runs/
+.env*
