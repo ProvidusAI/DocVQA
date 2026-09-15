@@ -20,8 +20,6 @@ PUBLISHED = {
     "official_anls": 0.906554,
     "exact_ci": 4506,
     "exact_normalized": 4725,
-    "coverage": 4981,        # internal_score >= 0.5
-    "internal_anls": 0.921347,
 }
 
 
@@ -55,15 +53,11 @@ def main(path: str) -> int:
         "official_anls": round(sum(official_anls(r["pred"], r["answers"]) for r in rows) / n, 6),
         "exact_ci": sum(any(normalize_ci(r["pred"]) == normalize_ci(a) for a in r["answers"]) for r in rows),
         "exact_normalized": sum(any(normalize(r["pred"]) == normalize(a) for a in r["answers"]) for r in rows),
-        "coverage": sum(r["internal_score"] >= 0.5 for r in rows),
-        "internal_anls": round(sum(r["internal_score"] for r in rows) / n, 6),
     }
     print(f"questions                 {got['total']}")
     print(f"official ANLS             {got['official_anls']:.6f}")
-    print(f"case-insensitive exact    {got['exact_ci']}  ({got['exact_ci']/n:.1%})")
     print(f"normalized exact          {got['exact_normalized']}  ({got['exact_normalized']/n:.1%})")
-    print(f"exact + partial coverage  {got['coverage']}  ({got['coverage']/n:.1%})")
-    print(f"internal ANLS             {got['internal_anls']:.6f}  (repair-loop scorer, not ANLS)")
+    print(f"case-insensitive exact    {got['exact_ci']}  ({got['exact_ci']/n:.1%})")
     if Path(path).resolve() != Path("results/predictions.jsonl").resolve():
         return 0  # a new run: print the table, nothing to assert against
     bad = {k: (got[k], PUBLISHED[k]) for k in PUBLISHED if got[k] != PUBLISHED[k]}

@@ -5,13 +5,13 @@
 <h1 align="center">Providus AI on DocVQA</h1>
 
 <p align="center">
-  <strong>Document parsing scored by what a language model can answer from the output alone. No image in the loop.</strong>
+  <strong>Document parsing scored by what a language model can answer from the output alone. No image at answer time.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Exact%20%2B%20Sparse-93.1%25-6DBBFF" alt="Exact + Sparse 93.1%">
-  <img src="https://img.shields.io/badge/Questions-5%2C349-111111" alt="5,349 questions">
   <img src="https://img.shields.io/badge/Official%20ANLS-0.9066-2B6FAA" alt="Official ANLS 0.9066">
+  <img src="https://img.shields.io/badge/Normalized%20exact%20match-88.3%25-6DBBFF" alt="Normalized exact match 88.3%">
+  <img src="https://img.shields.io/badge/Questions-5%2C349-111111" alt="5,349 questions">
   <img src="https://img.shields.io/badge/Dataset-DocVQA%20val-555555" alt="DocVQA validation">
   <img src="https://img.shields.io/badge/Parsed%20by-Providus%20DocAI-E89B3C" alt="Parsed by Providus DocAI">
 </p>
@@ -25,33 +25,31 @@
   <a href="NEXT_ITERATION.md">Next iteration</a>
 </p>
 
-DocVQA asks 5,349 questions about 1,285 real scanned documents: forms, letters, reports, tables, charts. It is normally used to score vision models that look at the page. We use it to score our parse output instead. The question-answering model in this benchmark never sees an image. It only sees the text and layout that Providus DocAI extracted from the page. If the answer is not in our output, the model cannot find it.
+DocVQA asks 5,349 questions about 1,286 real scanned documents: forms, letters, reports, tables, charts. (Two of them, document ids 4331 and 4386, are byte-identical page images, so the pipeline parses 1,285 unique pages.) It is normally used to score vision models that look at the page. We use it to score our parse output instead. The question-answering model in this benchmark never sees an image. It only sees the text and layout that Providus DocAI extracted from the page. If the answer is not in our output, the model cannot find it.
 
 ```
  PDF / scan            Providus DocAI                       QA model              Score
 ┌────────────┐   ┌──────────────────────────┐   ┌──────────────────────────┐   ┌───────────┐
-│ 1,285 docs │ → │ layout → OCR → vision    │ → │ grounded chunks (text +  │ → │ ANLS /    │
+│ 1,286 docs │ → │ layout → OCR → vision    │ → │ grounded chunks (text +  │ → │ ANLS /    │
 │            │   │ markdown + grounding JSON│   │ boxes), no page image    │   │ exact     │
 └────────────┘   └──────────────────────────┘   └──────────────────────────┘   └───────────┘
 ```
 
 ## Result
 
-**93.1% exact with sparsed coverage (4,981 of 5,349).** May 2026 campaign result, DocVQA validation set.
+**Official ANLS 0.9066. Normalized exact match 88.3% (4,725 of 5,349).** May 2026 campaign result, DocVQA validation set, all 5,349 questions scored, none excluded.
 
 | Metric | Value | Definition |
 |---|---:|---|
-| Exact + Sparsed coverage | 93.1% (4,981 / 5,349) | Percentage of extractions resulting in fully accurate and partially correct results |
 | Official ANLS | 0.9066 | Standard DocVQA ANLS. Best normalized Levenshtein similarity over the accepted answers, zero below 0.5. |
 | Normalized exact match | 88.3% (4,725) | Exact after lowercasing and removing punctuation, accents and extra spaces. |
-| Case-insensitive exact match | 84.2% (4,506) | Exact after lowercasing and trimming. The metric Landing AI reports. |
-| Internal ANLS | 0.9213 | Repair-loop scorer. Floors partial credit. Not ANLS. |
+| Case-insensitive exact match | 84.2% (4,506) | Exact after lowercasing and trimming only. |
 
-Every number in this table is recomputed by `evaluate.py` from `results/predictions.jsonl`. The script exits non-zero if any value differs from what is written here. `MISSES.md` lists where the remaining errors are and what fixes each group.
+Every number in this table is recomputed by `evaluate.py` from `results/predictions.jsonl`. The script exits non-zero if any value differs from what is written here, and it runs in GitHub Actions on every push (`.github/workflows/evaluate.yml`). `MISSES.md` lists where the remaining errors are and what fixes each group.
 
 ## Methodology
 
-1. Each of the 1,285 documents is parsed by DocAI: layout detection, OCR, and a vision pass over figures and tables. The output is markdown plus a grounding JSON that lists every element with its page, bounding box and text.
+1. Each of the 1,285 unique page images is parsed by DocAI: layout detection, OCR, and a vision pass over figures and tables. The output is markdown plus a grounding JSON that lists every element with its page, bounding box and text.
 2. For each question, the grounding is turned into chunks and the chunks most relevant to the question are placed in the QA model's context, up to 24,000 characters. The page image is never sent.
 3. The QA model returns the shortest verbatim span that answers the question, or "not found". The prompt is in `prompt.md`.
 4. Each prediction is scored against the accepted answers with official ANLS and with exact match. `evaluate.py` is the reference implementation of both.
@@ -63,7 +61,7 @@ Every number in this table is recomputed by `evaluate.py` from `results/predicti
 | Layout | layout-model |
 | OCR | the OCR model (a local model server) |
 | Vision | vision-model (a local model server) |
-| QA | gpt-5.4-mini, temperature 0, grounded context up to 24,000 characters, 128 output tokens |
+| QA | gpt-5.4-mini and gpt-5.4 (OpenAI), temperature 0, grounded context up to 24,000 characters, 128 output tokens |
 
 DocAI runs the same pipeline against any OCR, vision or QA model you point it at, hosted or local. That is a design choice: an on-prem customer with no internet runs everything on one a local model server box, and the cloud service uses hosted models. Every result we publish names the models that produced it.
 
@@ -98,11 +96,18 @@ Feed the markdown to the QA model of your choice with `prompt.md` and you have r
 
 The interactive API reference is at https://api.providus.ai/docs and the product documentation at https://docs.providus.ai (file upload and processing: https://docs.providus.ai/api/files and https://docs.providus.ai/api/file-processing). If you work from a coding agent, the DocAI MCP server exposes upload, parse, extract, classify, split and search as tools. Setup for Claude Code, Cursor and Codex is at https://docs.providus.ai/mcp; in Claude Code it is `/plugin marketplace add ProvidusAI/docai-plugins` then `/plugin install docai`, with `DOCAI_API_KEY` set.
 
-Running on your own hardware: `curl -fsSL https://providus.ai/deployment.sh | sh` installs the same stack on macOS, Linux or Windows with local models. On-prem installs point `DOCAI_BASE_URL` at their own instance and everything above works unchanged.
+Running on your own hardware: the on-prem installer is a versioned script with a published checksum. Download it, verify it, read it, then run it:
+
+    curl -fsSLO https://providus.ai/deployment.sh
+    curl -fsSLO https://providus.ai/deployment.sh.sha256
+    shasum -a 256 -c deployment.sh.sha256      # sha256sum -c on Linux
+    sh deployment.sh
+
+It installs the same stack on macOS, Linux or Windows with local models; the release bundle and its checksum are at `https://providus.ai/bundles/docai-onprem-<version>.zip` and `.zip.sha256`. On-prem installs point `DOCAI_BASE_URL` at their own instance and everything above works unchanged.
 
 ## Dataset
 
-DocVQA validation split, 5,349 questions over 1,285 page images. We read it from the Hugging Face mirror `lmms-lab/DocVQA` (config `DocVQA`, split `validation`). The images are not stored in this repo; the script below downloads about 1 GB into `data/docvqa/`:
+DocVQA validation split, 5,349 questions over 1,286 documents (1,285 unique page images; document ids 4331 and 4386 share one). We read it from the Hugging Face mirror `lmms-lab/DocVQA` (config `DocVQA`, split `validation`). The images are not stored in this repo; the script below downloads about 1 GB into `data/docvqa/`:
 
     pip install -r requirements-download.txt
     python scripts/download_docvqa.py
@@ -162,7 +167,7 @@ Step 2, parse every page with DocAI. Create an account at https://platform.provi
     export DOCAI_BASE_URL=https://api.providus.ai     # or your on-prem instance
     python scripts/parse_with_docai.py --kb-id <knowledge base id>
 
-Each page is uploaded with `auto_parse=true`; the script waits for the job and saves `result.md` and `grounding.json` under `parsed/{img_hash}/`. It skips pages that are already parsed, so it can be stopped and resumed. 1,285 pages cost 1,285 parse credits.
+Each page is uploaded with `auto_parse=true`; the script waits for the job and saves `result.md` and `grounding.json` under `parsed/{img_hash}/`. It skips pages that are already parsed, so it can be stopped and resumed. Parsing is per unique image, so the full set costs 1,285 parse credits.
 
 Step 3, answer the questions from the parsed markdown alone and score:
 
@@ -188,7 +193,7 @@ One JSON object per line in `results/predictions.jsonl`, sorted by `question_id`
 | `answers` | list of strings | Accepted answers from the dataset |
 | `pred` | string | DocAI plus QA model prediction |
 | `official_score` | float | Official ANLS for this row, 0 to 1 |
-| `internal_score` | float | Internal repair-loop score, 0 to 1 |
+| `internal_score` | float | Score from the campaign's internal repair-loop scorer, 0 to 1. Kept for the record; not a reported metric |
 | `exact_ci` | boolean | Case-insensitive exact match |
 | `exact_normalized` | boolean | Exact match after normalization |
 | `diagnostic` | string | Miss category used in `MISSES.md` |
