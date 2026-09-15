@@ -10,7 +10,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Official%20ANLS-0.9066-2B6FAA" alt="Official ANLS 0.9066">
-  <img src="https://img.shields.io/badge/Exact%20%2B%20partial-93.1%25-6DBBFF" alt="Exact + partial coverage 93.1%">
+  <img src="https://img.shields.io/badge/Exact%20%2B%20partial-93.1%25-6DBBFF" alt="Exact + Sparsed coverage 93.1%">
   <img src="https://img.shields.io/badge/Questions-5%2C349-111111" alt="5,349 questions">
   <img src="https://img.shields.io/badge/Dataset-DocVQA%20val-555555" alt="DocVQA validation">
   <img src="https://img.shields.io/badge/Parsed%20by-Providus%20DocAI-E89B3C" alt="Parsed by Providus DocAI">
@@ -37,11 +37,11 @@ DocVQA asks 5,349 questions about 1,285 real scanned documents: forms, letters, 
 
 ## Result
 
-**93.1% exact-or-partial coverage (4,981 of 5,349), official ANLS 0.9066.** May 2026 campaign result, DocVQA validation set.
+**93.1% exact with sparsed coverage (4,981 of 5,349).** May 2026 campaign result, DocVQA validation set.
 
 | Metric | Value | Definition |
 |---|---:|---|
-| Exact + partial coverage | 93.1% (4,981 / 5,349) | Questions scoring at least 0.5 under the internal scorer. A bucket count, not a score. |
+| Exact + Sparsed coverage | 93.1% (4,981 / 5,349) | Questions scoring at least 0.5 under the internal scorer. A bucket count, not a score. |
 | Official ANLS | 0.9066 | Standard DocVQA ANLS. Best normalized Levenshtein similarity over the accepted answers, zero below 0.5. |
 | Normalized exact match | 88.3% (4,725) | Exact after lowercasing and removing punctuation, accents and extra spaces. |
 | Case-insensitive exact match | 84.2% (4,506) | Exact after lowercasing and trimming. The metric Landing AI reports. |
@@ -63,7 +63,7 @@ Every number in this table is recomputed by `evaluate.py` from `results/predicti
 | Layout | PP-DocLayoutV3 |
 | OCR | glm-ocr@f16 (LM Studio) |
 | Vision | qwen/qwen3-vl-30b (LM Studio) |
-| QA | gpt-5.4-mini and gpt-5.4 (OpenAI), temperature 0, grounded context up to 24,000 characters, 128 output tokens |
+| QA | gpt-5.4-mini, temperature 0, grounded context up to 24,000 characters, 128 output tokens |
 
 DocAI runs the same pipeline against any OCR, vision or QA model you point it at, hosted or local. That is a design choice: an on-prem customer with no internet runs everything on one LM Studio box, and the cloud service uses hosted models. Every result we publish names the models that produced it.
 
