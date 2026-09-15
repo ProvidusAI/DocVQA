@@ -9,7 +9,7 @@ Usage:
   export QA_API_KEY=...                       # OpenAI-compatible endpoint key
   export QA_BASE_URL=https://api.openai.com/v1
   python scripts/run_qa.py --model openai/gpt-5.6-luna --run-id luna-baseline \
-      [--data-dir data] [--parsed-dir parsed] [--limit N] [--workers 4]
+      [--dataset-dir data/docvqa] [--parsed-dir parsed] [--limit N] [--workers 4]
   python evaluate.py results/runs/luna-baseline/predictions.jsonl
 Needs: pip install requests editdistance
 """
@@ -59,7 +59,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
     ap.add_argument("--run-id", required=True)
-    ap.add_argument("--data-dir", default="data")
+    ap.add_argument("--dataset-dir", default="data/docvqa", help="data/docvqa or data/docvqa-test")
     ap.add_argument("--parsed-dir", default="parsed")
     ap.add_argument("--prompt", default="prompt.md")
     ap.add_argument("--limit", type=int, default=None)
@@ -73,7 +73,7 @@ def main() -> None:
     m = re.search(r"```text\n(.*?)```", prompt_md, re.S)
     system = m.group(1).strip() if m else prompt_md
 
-    rows = [json.loads(l) for l in (Path(args.data_dir) / "docvqa" / "annotations.jsonl").open(encoding="utf-8")]
+    rows = [json.loads(l) for l in (Path(args.dataset_dir) / "annotations.jsonl").open(encoding="utf-8")]
     if args.limit:
         rows = rows[: args.limit]
 
