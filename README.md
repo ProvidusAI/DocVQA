@@ -16,6 +16,13 @@ DocVQA asks 5,349 questions about 1,285 real scanned documents: forms, letters, 
 
 Every number in this table is recomputed by `evaluate.py` from `results/predictions.jsonl`. The script exits non-zero if any value differs from what is written here. `MISSES.md` lists where the remaining errors are and what fixes each group.
 
+## Methodology
+
+1. Each of the 1,285 documents is parsed by DocAI: layout detection, OCR, and a vision pass over figures and tables. The output is markdown plus a grounding JSON that lists every element with its page, bounding box and text.
+2. For each question, the grounding is turned into chunks and the chunks most relevant to the question are placed in the QA model's context, up to 24,000 characters. The page image is never sent.
+3. The QA model returns the shortest verbatim span that answers the question, or "not found". The prompt is in `prompt.md`.
+4. Each prediction is scored against the accepted answers with official ANLS and with exact match. `evaluate.py` is the reference implementation of both.
+
 ## Configuration
 
 | Role | Model |
@@ -31,7 +38,7 @@ DocAI runs the same pipeline against any OCR, vision or QA model you point it at
 
 A benchmark number tells you how we do on DocVQA's documents. The number that matters is how we do on yours. The same pipeline behind this result is the one behind the DocAI API, so you can run your own bake-off in an afternoon.
 
-Sign in at https://platform.providus.ai. An organization admin creates a key under Settings, API Keys. Requests carry it in the `x-api-key` header.
+Create an account at https://platform.providus.ai/register. New organizations start with trial credits. An organization admin creates a key under Settings, API Keys. Requests carry it in the `x-api-key` header. Questions, larger evaluations or an on-prem trial: hello@providus.ai.
 
 Create a knowledge base, or list the ones you have:
 
@@ -56,7 +63,7 @@ The response includes the file id and the parse job. When the job completes, lis
 
 Feed the markdown to the QA model of your choice with `prompt.md` and you have reproduced this benchmark's setup on your own files. Score with your own answer key; `evaluate.py` shows the exact normalization we use.
 
-The interactive API reference is at https://api.providus.ai/docs and the product documentation at https://docs.providus.ai. If you work from a coding agent, the DocAI MCP server exposes upload, parse, extract, classify, split and search as tools; in Claude Code: `/plugin marketplace add ProvidusAI/docai-plugins` then `/plugin install docai`, with `DOCAI_API_KEY` set.
+The interactive API reference is at https://api.providus.ai/docs and the product documentation at https://docs.providus.ai (file upload and processing: https://docs.providus.ai/api/files and https://docs.providus.ai/api/file-processing). If you work from a coding agent, the DocAI MCP server exposes upload, parse, extract, classify, split and search as tools. Setup for Claude Code, Cursor and Codex is at https://docs.providus.ai/mcp; in Claude Code it is `/plugin marketplace add ProvidusAI/docai-plugins` then `/plugin install docai`, with `DOCAI_API_KEY` set.
 
 Running on your own hardware: `curl -fsSL https://providus.ai/deployment.sh | sh` installs the same stack on macOS, Linux or Windows with local models. On-prem installs point `DOCAI_BASE_URL` at their own instance and everything above works unchanged.
 
@@ -66,6 +73,24 @@ Running on your own hardware: `curl -fsSL https://providus.ai/deployment.sh | sh
     python evaluate.py
 
 `results/SHA256SUMS` covers the predictions file.
+
+## Data format
+
+One JSON object per line in `results/predictions.jsonl`, sorted by `question_id`:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `question_id` | string | DocVQA question id |
+| `doc_id` | integer | DocVQA document id |
+| `img_hash` | string | Short hash of the page image, stable across runs |
+| `question` | string | The question as asked |
+| `answers` | list of strings | Accepted answers from the dataset |
+| `pred` | string | DocAI plus QA model prediction |
+| `official_score` | float | Official ANLS for this row, 0 to 1 |
+| `internal_score` | float | Internal repair-loop score, 0 to 1 |
+| `exact_ci` | boolean | Case-insensitive exact match |
+| `exact_normalized` | boolean | Exact match after normalization |
+| `diagnostic` | string | Miss category used in `MISSES.md` |
 
 ## Files
 
