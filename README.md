@@ -1,6 +1,39 @@
-# Providus AI on DocVQA
+<p align="center">
+  <img src="assets/banner.png" alt="Providus DocAI on DocVQA" width="100%">
+</p>
+
+<h1 align="center">Providus AI on DocVQA</h1>
+
+<p align="center">
+  <strong>Document parsing scored by what a language model can answer from the output alone. No image in the loop.</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Official%20ANLS-0.9066-2B6FAA" alt="Official ANLS 0.9066">
+  <img src="https://img.shields.io/badge/Exact%20%2B%20partial-93.1%25-6DBBFF" alt="Exact + partial coverage 93.1%">
+  <img src="https://img.shields.io/badge/Questions-5%2C349-111111" alt="5,349 questions">
+  <img src="https://img.shields.io/badge/Dataset-DocVQA%20val-555555" alt="DocVQA validation">
+  <img src="https://img.shields.io/badge/Parsed%20by-Providus%20DocAI-E89B3C" alt="Parsed by Providus DocAI">
+</p>
+
+<p align="center">
+  <a href="https://platform.providus.ai/register">Try DocAI</a> •
+  <a href="https://api.providus.ai/docs">API reference</a> •
+  <a href="https://docs.providus.ai">Docs</a> •
+  <a href="https://docs.providus.ai/mcp">MCP</a> •
+  <a href="MISSES.md">Where the misses are</a> •
+  <a href="NEXT_ITERATION.md">Next iteration</a>
+</p>
 
 DocVQA asks 5,349 questions about 1,285 real scanned documents: forms, letters, reports, tables, charts. It is normally used to score vision models that look at the page. We use it to score our parse output instead. The question-answering model in this benchmark never sees an image. It only sees the text and layout that Providus DocAI extracted from the page. If the answer is not in our output, the model cannot find it.
+
+```
+ PDF / scan            Providus DocAI                       QA model              Score
+┌────────────┐   ┌──────────────────────────┐   ┌──────────────────────────┐   ┌───────────┐
+│ 1,285 docs │ → │ layout → OCR → vision    │ → │ grounded chunks (text +  │ → │ ANLS /    │
+│            │   │ markdown + grounding JSON│   │ boxes), no page image    │   │ exact     │
+└────────────┘   └──────────────────────────┘   └──────────────────────────┘   └───────────┘
+```
 
 ## Result
 
@@ -101,3 +134,9 @@ One JSON object per line in `results/predictions.jsonl`, sorted by `question_id`
 - `evaluate.py`: standalone scorer, no dependency on the DocAI codebase.
 
 Raw DocVQA images are not included. The Hugging Face mirror (`lmms-lab/DocVQA`) lists apache-2.0; the official distribution is through the RRC portal under its own terms.
+
+---
+
+<p align="center">
+  Built by <a href="https://providus.ai">Providus AI</a>. Questions and evaluations: <a href="mailto:hello@providus.ai">hello@providus.ai</a>
+</p>
