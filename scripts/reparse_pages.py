@@ -16,7 +16,6 @@ from evaluate import normalize
 
 BASE = os.environ.get("DOCAI_BASE_URL", "http://localhost:8080").rstrip("/")
 H = {"x-api-key": os.environ.get("DOCAI_API_KEY", "")}
-OPTIONS = {"backend": "ocr-model", "redact": False}
 
 
 def req(method, path, **kw):
@@ -34,9 +33,11 @@ def main():
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--poll", type=int, default=15)
     ap.add_argument("--collect-only", action="store_true", help="skip delete/upload; poll the latest parse job of each page")
+    ap.add_argument("--options", default='{"backend": "ocr-model", "redact": false}', help="parse_options JSON sent with each upload")
     a = ap.parse_args()
     if not H["x-api-key"]:
         sys.exit("DOCAI_API_KEY is not set")
+    json.loads(a.options)  # fail early on bad JSON
     run = Path(a.run_dir); parsed = run / "parsed"; staging = run / "reparse-staging"
     manifest_path = parsed / "_manifest.json"; manifest = json.loads(manifest_path.read_text())
     hashes = {str(json.loads(l)["doc_id"]): json.loads(l)["img_hash"] for l in open("results/predictions.jsonl", encoding="utf-8")}
@@ -76,7 +77,7 @@ def main():
             req("DELETE", f"/v1/files/{old['id']}")
         with open(Path(a.dataset_dir) / "images" / f"{doc_id}.png", "rb") as fh:
             body = req("POST", "/v1/files", files={"file": (f"{doc_id}.png", fh, "image/png")},
-                       data={"kb_id": a.kb_id, "auto_parse": "true", "parse_options": json.dumps(OPTIONS)}).json()
+                       data={"kb_id": a.kb_id, "auto_parse": "true", "parse_options": a.options}).json()
         jobs[doc_id] = (body["file"]["id"], body["parse_job"]["job_id"])
     print(f"queued {len(jobs)}", flush=True)
 
