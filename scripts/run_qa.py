@@ -102,7 +102,7 @@ def main() -> None:
             r["img_hash"] = by_doc.get(str(r["docId"]), "")
     if args.ids_file:
         keep = {l.strip() for l in open(args.ids_file) if l.strip()}
-        rows = [r for r in rows if r["questionId"] in keep]
+        rows = [r for r in rows if str(r["questionId"]) in keep]
     if args.limit:
         rows = rows[: args.limit]
 
