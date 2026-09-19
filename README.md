@@ -117,21 +117,6 @@ Coordinates come normalized and in pixels. `confidence.route` says whether the e
 
 Every number in this table is recomputed by `evaluate.py` from `results/predictions.jsonl`. The script exits non-zero if any value differs from what is written here, and it runs in GitHub Actions on every push (`.github/workflows/evaluate.yml`). `MISSES.md` lists where the remaining errors are and what fixes each group.
 
-## Runs
-
-Each run is one configuration over all 5,349 questions, scored with `evaluate.py`. The parsed output for every page, the predictions and the run manifest live under `runs/<run id>/`.
-
-| Run | Official ANLS | Normalized exact | Case-insensitive exact | Exact + near match | Configuration |
-|---|---:|---:|---:|---:|---|
-| May 2026 campaign result | 0.9066 | 88.3% (4,725) | 84.2% (4,506) | 93.1% (4,981) | the OCR model, vision-model (a local model server), QA gpt-5.4-mini and gpt-5.4, grounded chunks up to 24,000 characters |
-| 2026-09-19 local run | 0.8598 | 82.5% (4,412) | 78.1% (4,176) | 87.2% (4,663)* | ocr-model, vision-model (a local model server on a one machine), QA gpt-5.6-luna at low reasoning effort, full page markdown as context, 256 output tokens |
-
-*For runs after May 2026 this column counts questions with official ANLS of at least 0.5 (exact plus partial credit); the campaign scorer's near-match rule is not part of this toolkit.
-
-The 2026-09-19 run is the first under the protocol in `NEXT_ITERATION.md`: the whole set parsed once with one configuration on local models, then answered in one pass by one QA model. Its artifacts are in `runs/2026-09-docai-run/`: `parsed/` (1,285 pages, `result.md` and `grounding.json` each, plus `_manifest.json` with the configuration and DocAI manifest ids), `predictions.jsonl`, `run.json` and `SHA256SUMS`. Of its 686 zero-score questions, 313 are answers the model reported as not found in the parsed text; the rest are wrong answers. Score it yourself:
-
-    python evaluate.py runs/2026-09-docai-run/predictions.jsonl
-
 ## Methodology
 
 1. Each of the 1,285 unique page images is parsed by DocAI: layout detection, OCR, and a vision pass over figures and tables. The output is markdown plus a grounding JSON that lists every element with its page, bounding box and text.
@@ -231,7 +216,7 @@ It writes one PNG per document, `annotations.jsonl` with the questions and accep
     │   ├── parse_with_docai.py       step 2: every page through the DocAI API to parsed/
     │   ├── run_qa.py                 step 3: QA over the parsed markdown, one pass
     │   └── make_submission.py        converts a test run into the RRC portal's result_task1.json
-    ├── runs/<run id>/             one folder per run: parsed/, predictions.jsonl, run.json, SHA256SUMS
+    ├── runs/<run id>/             one folder per parse run: parsed/ pages, _manifest.json, qa-attempts/
     ├── results/
     │   ├── predictions.jsonl         the published run, 5,349 rows
     │   ├── SHA256SUMS
