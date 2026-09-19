@@ -70,7 +70,7 @@ def main():
         old = files.get(doc_id)
         if a.collect_only:
             js = [j for j in req("GET", f"/v1/files/{old['id']}/jobs").json()["jobs"] if j.get("kind", "parse") == "parse"]
-            jobs[doc_id] = (old["id"], max(js, key=lambda j: j["created_at"])["id"])
+            jobs[doc_id] = (old["id"], max(js, key=lambda j: j["created_at"])["job_id"])
             continue
         if old:
             req("DELETE", f"/v1/files/{old['id']}")
