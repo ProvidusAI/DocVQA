@@ -79,6 +79,7 @@ def main() -> None:
     ap.add_argument("--parsed-dir", default="parsed")
     ap.add_argument("--prompt", default="prompt.md")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--ids-file", default=None, help="only these question ids, one per line")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--max-tokens", type=int, default=256)
     ap.add_argument("--reasoning", default="low", choices=["none", "minimal", "low", "medium", "high"],
@@ -99,6 +100,9 @@ def main() -> None:
                   for l in open("results/predictions.jsonl", encoding="utf-8")}
         for r in rows:
             r["img_hash"] = by_doc.get(str(r["docId"]), "")
+    if args.ids_file:
+        keep = {l.strip() for l in open(args.ids_file) if l.strip()}
+        rows = [r for r in rows if r["questionId"] in keep]
     if args.limit:
         rows = rows[: args.limit]
 
