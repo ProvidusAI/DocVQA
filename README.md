@@ -117,6 +117,26 @@ Coordinates come normalized and in pixels. `confidence.route` says whether the e
 
 Every number in this table is recomputed by `evaluate.py` from `results/predictions.jsonl`. The script exits non-zero if any value differs from what is written here, and it runs in GitHub Actions on every push (`.github/workflows/evaluate.yml`). `MISSES.md` lists where the remaining errors are and what fixes each group.
 
+## Result: September 2026 local run
+
+**Official ANLS 0.9120. Normalized exact match 87.2% (4,665 of 5,349). Exact or near match 92.4% (4,942).** Local DocAI stack, every model on one one machine, DocVQA validation set, all 5,349 questions scored, none excluded.
+
+| Metric | Value | Definition |
+|---|---:|---|
+| Official ANLS | 0.9120 | Standard DocVQA ANLS, as above. |
+| Normalized exact match | 87.2% (4,665) | Exact after lowercasing and removing punctuation, accents and extra spaces. |
+| Case-insensitive exact match | 83.4% (4,462) | Exact after lowercasing and trimming only. |
+| Exact + near match | 92.4% (4,942) | 4,665 exact plus 277 near matches, same near-match rule as above. |
+
+| Role | Model |
+|---|---|
+| Layout | layout-model |
+| OCR | ocr-model (a local model server, one machine) |
+| Vision | vision-model and vision-model (a local model server, one machine) |
+| QA | gpt-5.6-terra (OpenAI), reasoning effort low, 512 output tokens, prompt `prompt-md.md` |
+
+This run differs from the campaign in two ways. The QA model reads the full page markdown (`result.md`), not grounded chunks, and it still never sees the image. And the whole pipeline ran on a local DocAI stack with a local model server models on one one machine, the same setup an on-prem customer gets. The parsed pages, `predictions.jsonl` and `run.json` are in `runs/2026-09-docai-run/`; `python evaluate.py runs/2026-09-docai-run/predictions.jsonl` prints this table.
+
 ## Methodology
 
 1. Each of the 1,285 unique page images is parsed by DocAI: layout detection, OCR, and a vision pass over figures and tables. The output is markdown plus a grounding JSON that lists every element with its page, bounding box and text.
@@ -216,7 +236,7 @@ It writes one PNG per document, `annotations.jsonl` with the questions and accep
     │   ├── parse_with_docai.py       step 2: every page through the DocAI API to parsed/
     │   ├── run_qa.py                 step 3: QA over the parsed markdown, one pass
     │   └── make_submission.py        converts a test run into the RRC portal's result_task1.json
-    ├── runs/<run id>/             one folder per parse run: parsed/ pages, _manifest.json, qa-attempts/
+    ├── runs/<run id>/             one folder per run: parsed/ pages, _manifest.json, predictions.jsonl, run.json
     ├── results/
     │   ├── predictions.jsonl         the published run, 5,349 rows
     │   ├── SHA256SUMS
@@ -263,7 +283,7 @@ Step 3, answer the questions from the parsed markdown alone and score:
     python scripts/run_qa.py --model openai/gpt-5.6-luna --run-id luna-baseline
     python evaluate.py results/runs/luna-baseline/predictions.jsonl
 
-The QA model receives `prompt.md` as the system prompt and the full `result.md` of the page as the user message, temperature 0, 128 output tokens. It never receives the image. The run writes `results/runs/<run-id>/predictions.jsonl` in the same shape as the published file plus a `run.json` with the model and endpoint, and `evaluate.py` prints the same table for it. This is the protocol in `NEXT_ITERATION.md`: one configuration, one pass, official scoring.
+The QA model receives the prompt file (`--prompt`, default `prompt.md`) as the system prompt and the full `result.md` of the page as the user message; `--reasoning` and `--max-tokens` set the reasoning effort and output budget. It never receives the image. The run writes `results/runs/<run-id>/predictions.jsonl` in the same shape as the published file plus a `run.json` with the model and endpoint, and `evaluate.py` prints the same table for it. This is the protocol in `NEXT_ITERATION.md`: one configuration, one pass, official scoring.
 
 Try a small slice first: every script accepts `--limit N`.
 
