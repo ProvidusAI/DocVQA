@@ -1,0 +1,9 @@
+{
+ "run_id": "2026-09-docai-run",
+ "qa_model": "openai/gpt-5.6-terra",
+ "qa_base_url": "https://api.openai.com/v1",
+ "prompt": "prompt-md.md",
+ "max_tokens": 512,
+ "reasoning_effort": "low",
+ "questions": 5349
+}

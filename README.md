@@ -31,7 +31,7 @@ Providus DocAI turns a scanned page into two things: markdown a person can read,
 
 ## What the parse output looks like
 
-Five DocVQA pages, parsed on a laptop with local models (ocr-model and vision-model in a local model server, no cloud). The blue box is the grounding element DocAI returned that contains the answer. No box was drawn by hand: `scripts/build_gallery.py` searches the grounding JSON for the answer text and draws the element's bounding box.
+Five DocVQA pages parsed with DocAI. The blue box is the grounding element DocAI returned that contains the answer. No box was drawn by hand: `scripts/build_gallery.py` searches the grounding JSON for the answer text and draws the element's bounding box.
 
 <table>
 <tr>
@@ -146,19 +146,17 @@ This run differs from the campaign in one way: the QA model reads the full page 
 
 | Role | Model |
 |---|---|
-| Layout | layout-model |
-| OCR | the OCR model (a local model server) |
-| Vision | vision-model (a local model server) |
+| Parsing | DocAI parsing pipeline (layout, OCR, vision) |
 | QA | gpt-5.4-mini and gpt-5.4 (OpenAI), temperature 0, grounded context up to 24,000 characters, 128 output tokens |
 
-DocAI runs the same pipeline against any OCR, vision or QA model you point it at, hosted or local. That is a design choice: an on-prem customer with no internet runs everything on one a local model server box, and the cloud service uses hosted models. Every result we publish names the models that produced it. The gallery above was produced with the smaller local models (ocr-model, vision-model) on a laptop; the benchmark figures below used vision-model.
+DocAI runs the same pipeline hosted or on-prem: an on-prem customer with no internet runs everything on one machine with their own local models, and the cloud service uses hosted models. Every result we publish names the QA model that produced it; the parsing pipeline is the product.
 
 ## Where it runs
 
 | | How | Models |
 |---|---|---|
 | Cloud API | `https://api.providus.ai`, API key in `x-api-key` | Hosted OCR, vision and QA models |
-| On-prem | Versioned installer, Docker, one machine, no internet needed | Your a local model server or Ollama models |
+| On-prem | Versioned installer, Docker, one machine, no internet needed | Your own local models |
 | Coding agents | DocAI MCP server for Claude Code, Cursor, Codex | Same API underneath |
 | Redaction | Rules per knowledge base; PII, health, card and company data scrubbed from markdown and burned on page images at parse time | Runs after parse, on-prem by default |
 

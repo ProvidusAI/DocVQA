@@ -10,7 +10,7 @@ you pass in. Resumable: pages that already have both files are skipped.
 Usage:
   export DOCAI_API_KEY=... DOCAI_BASE_URL=http://localhost:8080
   python scripts/pull_parsed.py --kb-id <id> --parsed-dir runs/<run-id>/parsed \
-      --config "the OCR model + vision-model (a local model server, one machine)" [--workers 8] [--with-images]
+      --config "DocAI parsing pipeline; run 2026-09" [--workers 8] [--with-images]
 Needs: requests
 """
 import argparse

@@ -33,7 +33,7 @@ def main():
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--poll", type=int, default=15)
     ap.add_argument("--collect-only", action="store_true", help="skip delete/upload; poll the latest parse job of each page")
-    ap.add_argument("--options", default='{"backend": "ocr-model", "redact": false}', help="parse_options JSON sent with each upload")
+    ap.add_argument("--options", default='{"redact": false}', help="parse_options JSON sent with each upload (for example a forced backend)")
     a = ap.parse_args()
     if not H["x-api-key"]:
         sys.exit("DOCAI_API_KEY is not set")
@@ -58,9 +58,6 @@ def main():
             for name in ("result.md", "grounding.json"):
                 shutil.copy(src / name, parsed / h / name)
             manifest["pages"][h].update(json.loads((src / "_ids.json").read_text()))
-        both = "vision vision-model, vision-model on low-yield pages"
-        if both not in manifest["config"]:
-            manifest["config"] = manifest["config"].replace("vision vision-model", both)
         manifest_path.write_text(json.dumps(manifest, indent=1))
         shutil.rmtree(staging, ignore_errors=True)
         print(f"applied {len(ids)} pages into {parsed}"); return
