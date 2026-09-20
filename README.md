@@ -117,9 +117,9 @@ Coordinates come normalized and in pixels. `confidence.route` says whether the e
 
 Every number in this table is recomputed by `evaluate.py` from `results/predictions.jsonl`. The script exits non-zero if any value differs from what is written here, and it runs in GitHub Actions on every push (`.github/workflows/evaluate.yml`). `MISSES.md` lists where the remaining errors are and what fixes each group.
 
-## Result: September 2026 local run
+## Result: DocAI Run, September 2026
 
-**Official ANLS 0.9120. Normalized exact match 87.2% (4,665 of 5,349). Exact or near match 92.4% (4,942).** Local DocAI stack, every model on one one machine, DocVQA validation set, all 5,349 questions scored, none excluded.
+**Official ANLS 0.9120. Normalized exact match 87.2% (4,665 of 5,349). Exact or near match 92.4% (4,942).** DocVQA validation set, all 5,349 questions scored, none excluded.
 
 | Metric | Value | Definition |
 |---|---:|---|
@@ -130,12 +130,10 @@ Every number in this table is recomputed by `evaluate.py` from `results/predicti
 
 | Role | Model |
 |---|---|
-| Layout | layout-model |
-| OCR | ocr-model (a local model server, one machine) |
-| Vision | vision-model and vision-model (a local model server, one machine) |
+| Parsing | DocAI parsing pipeline (layout, OCR, vision) |
 | QA | gpt-5.6-terra (OpenAI), reasoning effort low, 512 output tokens, prompt `prompt-md.md` |
 
-This run differs from the campaign in two ways. The QA model reads the full page markdown (`result.md`), not grounded chunks, and it still never sees the image. And the whole pipeline ran on a local DocAI stack with a local model server models on one one machine, the same setup an on-prem customer gets. The parsed pages, `predictions.jsonl` and `run.json` are in `runs/2026-09-docai-run/`; `python evaluate.py runs/2026-09-docai-run/predictions.jsonl` prints this table.
+This run differs from the campaign in one way: the QA model reads the full page markdown (`result.md`) instead of grounded chunks. It still never sees the image. The parsed pages, `predictions.jsonl` and `run.json` are in `runs/2026-09-docai-run/`; `python evaluate.py runs/2026-09-docai-run/predictions.jsonl` prints this table.
 
 ## Methodology
 
